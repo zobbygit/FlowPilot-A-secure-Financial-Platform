@@ -1,8 +1,9 @@
+
 package com.flowpilot.config;
 
-import jakarta.validation.constraints.NotBlank;
 import java.time.Duration;
 import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -10,7 +11,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "flowpilot")
 public record AppProperties(
-        @NotBlank String publicBaseUrl,
+        String publicBaseUrl,
         Cors cors,
         Cookie cookie,
         Sessions sessions,
@@ -27,13 +28,27 @@ public record AppProperties(
 
     public record Tokens(Duration verifyEmailTtl, Duration resetPasswordTtl) {}
 
-    public record Brevo(boolean enabled, String apiKey, String senderEmail, String senderName) {}
+    public record Brevo(
+            boolean enabled,
+            String apiKey,
+            String senderEmail,
+            String senderName) {}
 
-    public record Admin(String bootstrapEmail, String bootstrapPassword, String bootstrapName, boolean bootstrapReset) {}
+    public record Admin(
+            String bootstrapEmail,
+            String bootstrapPassword,
+            String bootstrapName,
+            boolean bootstrapReset) {}
 
-    public record Cloudinary(String cloudName, String apiKey, String apiSecret) {
+    public record Cloudinary(
+            String cloudName,
+            String apiKey,
+            String apiSecret) {
+
         public boolean configured() {
-            return cloudName != null && !cloudName.isBlank() && apiKey != null && !apiKey.isBlank() && apiSecret != null && !apiSecret.isBlank();
+            return cloudName != null && !cloudName.isBlank()
+                    && apiKey != null && !apiKey.isBlank()
+                    && apiSecret != null && !apiSecret.isBlank();
         }
     }
 }
