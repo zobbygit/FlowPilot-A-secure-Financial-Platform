@@ -33,25 +33,25 @@ public class ProductionConfigValidator implements InitializingBean {
             // Configure the real public URL when needed.
         } else if (!isHttpsUrl(baseUrl)) {
             problems.add(
-                "FLOWPILOT_PUBLIC_BASE_URL must be a valid HTTPS URL"
+                    "FLOWPILOT_PUBLIC_BASE_URL must be a valid HTTPS URL"
             );
         }
 
-List<String> origins = props.cors().allowedOrigins();
+        List<String> origins = props.cors().allowedOrigins();
 
-if (origins == null || origins.isEmpty()) {
-    problems.add("FLOWPILOT_CORS_ALLOWED_ORIGINS must be set");
-} else {
-    for (String origin : origins) {
-        if (isBlank(origin) || !isHttpsOrigin(origin.trim())) {
-            problems.add(
-                "FLOWPILOT_CORS_ALLOWED_ORIGINS must contain " +
-                "explicit HTTPS origins without wildcards"
-            );
-            break;
+        if (origins == null || origins.isEmpty()) {
+            problems.add("FLOWPILOT_CORS_ALLOWED_ORIGINS must be set");
+        } else {
+            for (String origin : origins) {
+                if (isBlank(origin) || !isHttpsOrigin(origin.trim())) {
+                    problems.add(
+                            "FLOWPILOT_CORS_ALLOWED_ORIGINS must contain "
+                            + "explicit HTTPS origins without wildcards"
+                    );
+                    break;
+                }
+            }
         }
-    }
-}
 
         if ("None".equalsIgnoreCase(props.cookie().sameSite())
                 && !props.cookie().secure()) {
@@ -75,14 +75,14 @@ if (origins == null || origins.isEmpty()) {
         if (props.cloudinary() == null
                 || !props.cloudinary().configured()) {
             problems.add(
-                "CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and " +
-                "CLOUDINARY_API_SECRET must be set"
+                    "CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and "
+                    + "CLOUDINARY_API_SECRET must be set"
             );
         }
 
         if (!problems.isEmpty()) {
             throw new IllegalStateException(
-                "Invalid production configuration: "
+                    "Invalid production configuration: "
                     + String.join("; ", problems)
             );
         }
@@ -96,16 +96,16 @@ if (origins == null || origins.isEmpty()) {
         try {
             URI uri = URI.create(value.trim());
             return "https".equalsIgnoreCase(uri.getScheme())
-                && uri.getHost() != null
-                && !uri.getHost().isBlank()
-                && uri.getUserInfo() == null;
+                    && uri.getHost() != null
+                    && !uri.getHost().isBlank()
+                    && uri.getUserInfo() == null;
         } catch (IllegalArgumentException ex) {
             return false;
         }
     }
 
     private static boolean isHttpsOrigin(String value) {
-        if (value.contains("*")) {
+        if (value == null || value.isBlank() || value.contains("*")) {
             return false;
         }
 
@@ -113,12 +113,14 @@ if (origins == null || origins.isEmpty()) {
             URI uri = URI.create(value.trim());
 
             return "https".equalsIgnoreCase(uri.getScheme())
-                && uri.getHost() != null
-                && !uri.getHost().isBlank()
-                && uri.getUserInfo() == null
-                && uri.getRawPath() == null
-                && uri.getRawQuery() == null
-                && uri.getRawFragment() == null;
+                    && uri.getHost() != null
+                    && !uri.getHost().isBlank()
+                    && uri.getUserInfo() == null
+                    && (uri.getRawPath() == null
+                    || uri.getRawPath().isEmpty()
+                    || uri.getRawPath().equals("/"))
+                    && uri.getRawQuery() == null
+                    && uri.getRawFragment() == null;
         } catch (IllegalArgumentException ex) {
             return false;
         }
