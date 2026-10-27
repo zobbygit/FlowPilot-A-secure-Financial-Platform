@@ -1,0 +1,87 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: backend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '25', cache: maven }
+      - run: mvn -B verify
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test:ci
+      - run: npm run build
+        env: { VITE_API_BASE_URL: https://api.example.invalid/api }
+      - run: npm audit --audit-level=high
+
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
+
+  dependency-scan:
+    # OWASP dependency-check for the Java tree. Add NVD_API_KEY as a repo secret (free key) or the first run is very slow.
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    defaults: { run: { working-directory: backend } }
+    env: { NVD_API_KEY: '${{ secrets.NVD_API_KEY }}' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '25', cache: maven }
+      - run: mvn -B -Psecurity -DskipTests verify
+
+  e2e:
+    # Browser smoke tests against the real stack (Postgres service + built API + Vite dev server).
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    services:
+      postgres:
+        image: postgres:17
+        env: { POSTGRES_DB: flowpilot, POSTGRES_USER: flowpilot, POSTGRES_PASSWORD: ci_only_not_a_secret }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U flowpilot" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      SPRING_PROFILES_ACTIVE: dev
+      DATABASE_URL: jdbc:postgresql://localhost:5432/flowpilot
+      DATABASE_USERNAME: flowpilot
+      DATABASE_PASSWORD: ci_only_not_a_secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '25', cache: maven }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: mvn -B -q -DskipTests package
+        working-directory: backend
+      - run: nohup java -jar backend/target/flowpilot-api-0.1.0-SNAPSHOT.jar > api.log 2>&1 &
+      - run: npm ci && npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run dev -- --host 127.0.0.1 &
+        working-directory: frontend
+        env: { VITE_API_BASE_URL: 'http://localhost:8080/api' }
+      - run: npx wait-on http://127.0.0.1:5173 http://localhost:8080/actuator/health && npx playwright test --project=desktop
+        working-directory: frontend
+        env: { E2E_BASE_URL: 'http://127.0.0.1:5173' }
+      - if: failure()
+        run: tail -n 200 api.log

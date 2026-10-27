@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Spring Boot's default console logging (plain text locally, JSON when logging.structured.format.console is set)
+     plus a filter that drops any log line containing a database URL or credential. See SecretLogFilter. -->
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+  <turboFilter class="com.flowpilot.logging.SecretLogFilter"/>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+</configuration>

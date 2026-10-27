@@ -1,0 +1,12 @@
+# Local PostgreSQL only (dev password is local-only and not a secret).
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: flowpilot
+      POSTGRES_USER: flowpilot
+      POSTGRES_PASSWORD: flowpilot_dev_only
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+volumes:
+  pgdata:

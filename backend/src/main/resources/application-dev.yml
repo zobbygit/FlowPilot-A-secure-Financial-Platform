@@ -1,0 +1,13 @@
+# Local development only. Brevo is off by default: verification links are printed to the log
+# (clearly marked) instead of being emailed. Set BREVO_ENABLED=true to use the real API.
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/flowpilot}
+    username: ${DATABASE_USERNAME:flowpilot}
+    password: ${DATABASE_PASSWORD:flowpilot_dev_only}
+  jpa:
+    hibernate:
+      ddl-auto: validate        # fail fast in dev if entities drift from the Flyway schema
+logging:
+  level:
+    com.flowpilot: DEBUG

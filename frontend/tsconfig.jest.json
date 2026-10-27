@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "isolatedModules": false,
+    "noEmit": false,
+    "types": ["jest", "node"]
+  }
+}

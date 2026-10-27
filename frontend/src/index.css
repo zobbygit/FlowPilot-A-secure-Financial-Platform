@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens. Light is a deliberately separate palette, not an inversion of dark.
+   Brand: Deep Purple (primary), Electric Violet (accent), Midnight Black / Soft White (surfaces),
+   subtle Cyan (live financial activity only). Values are space-separated RGB for Tailwind alpha. */
+:root {
+  --fp-bg: 247 245 255;        /* Soft White */
+  --fp-surface: 255 255 255;
+  --fp-surface-2: 240 236 253;
+  --fp-line: 221 213 245;
+  --fp-ink: 26 16 51;
+  --fp-muted: 95 86 131;
+  --fp-primary: 76 29 149;     /* Deep Purple */
+  --fp-accent: 109 40 217;     /* Electric Violet (AA on white) */
+  --fp-live: 14 116 144;
+  --fp-success: 4 120 87;
+  --fp-danger: 185 28 28;
+  --fp-warning: 180 83 9;
+  color-scheme: light;
+}
+.dark {
+  --fp-bg: 7 5 15;             /* Midnight Black */
+  --fp-surface: 15 10 31;
+  --fp-surface-2: 24 17 48;
+  --fp-line: 46 36 88;
+  --fp-ink: 244 241 255;
+  --fp-muted: 167 159 199;
+  --fp-primary: 91 33 182;
+  --fp-accent: 139 92 246;
+  --fp-live: 34 211 238;
+  --fp-success: 52 211 153;
+  --fp-danger: 248 113 113;
+  --fp-warning: 251 191 36;
+  color-scheme: dark;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body { @apply bg-bg text-ink font-sans antialiased; }
+.num { font-variant-numeric: tabular-nums; }          /* financial figures */
+:focus-visible { outline: 2px solid rgb(var(--fp-accent)); outline-offset: 2px; border-radius: 6px; }
+
+.fp-orb {
+  background:
+    radial-gradient(60% 60% at 30% 30%, rgb(var(--fp-accent) / .55), transparent 70%),
+    radial-gradient(50% 50% at 75% 70%, rgb(var(--fp-primary) / .6), transparent 70%),
+    radial-gradient(25% 25% at 60% 20%, rgb(var(--fp-live) / .25), transparent 70%);
+  filter: blur(8px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fp-float { animation: fp-float 9s ease-in-out infinite; }
+  @keyframes fp-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-10px) } }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+}
+
+/* Pipeline motion (disabled automatically by the global prefers-reduced-motion rule) */
+@media (prefers-reduced-motion: no-preference) {
+  .fp-flow { animation: fp-flow 3.2s linear infinite; }
+  @keyframes fp-flow { to { stroke-dashoffset: -280; } }
+  .fp-pulse { transform-box: fill-box; transform-origin: center; animation: fp-pulse 2.4s ease-out infinite; }
+  @keyframes fp-pulse { 0% { transform: scale(.85); opacity: .9 } 100% { transform: scale(1.35); opacity: 0 } }
+  .fp-live-dot { animation: fp-blink 1.8s ease-in-out infinite; }
+  @keyframes fp-blink { 50% { opacity: .35 } }
+}
+@media (prefers-reduced-motion: reduce) { .fp-flow { stroke-dasharray: none; opacity: .5; } .fp-pulse { opacity: .6; } }

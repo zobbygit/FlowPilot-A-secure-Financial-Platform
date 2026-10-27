@@ -1,0 +1,101 @@
+spring:
+  application:
+    name: flowpilot-api
+  config:
+    import:
+      - optional:file:.env[.properties]        # when started from the project root
+      - optional:file:../.env[.properties]     # when started from the backend folder
+  datasource:
+    url: ${DATABASE_URL:}
+    username: ${DATABASE_USERNAME:}
+    password: ${DATABASE_PASSWORD:}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:5}      # small on purpose: Neon limits connections and the free tier sleeps
+      minimum-idle: 1
+      connection-timeout: 20000
+      validation-timeout: 5000
+      max-lifetime: 840000                       # recycle before Neon / proxies drop idle connections
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none            # schema is owned by Flyway; never auto-create
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=5m   # non-authoritative data only
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB
+
+logging:
+  level:
+    # Third-party libraries print the database host/URL during start-up (Flyway: "Database: jdbc:postgresql://...").
+    org.flywaydb: WARN
+    org.flywaydb.core.internal.command.DbMigrate: INFO     # still shows "Migrating schema ... to version N"
+    com.zaxxer.hikari: WARN
+    org.hibernate: WARN
+    org.springframework.boot.autoconfigure.security: WARN
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+      group:
+        readiness:
+          include: readinessState,db
+
+flowpilot:
+  public-base-url: ${FLOWPILOT_PUBLIC_BASE_URL:http://localhost:5173}
+  cors:
+    allowed-origins: ${FLOWPILOT_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  cookie:
+    name: fp_session
+    secure: ${FLOWPILOT_COOKIE_SECURE:false}
+    same-site: ${FLOWPILOT_COOKIE_SAMESITE:Lax}
+  sessions:
+    idle-timeout: ${FLOWPILOT_SESSION_IDLE:PT2H}
+    absolute-timeout: ${FLOWPILOT_SESSION_ABSOLUTE:P7D}
+  tokens:
+    verify-email-ttl: PT24H
+    reset-password-ttl: PT30M
+  brevo:
+    enabled: ${BREVO_ENABLED:true}       # real emails are sent whenever BREVO_API_KEY is set; false forces log-only
+    api-key: ${BREVO_API_KEY:}
+    sender-email: ${BREVO_SENDER_EMAIL:}
+    sender-name: ${BREVO_SENDER_NAME:FlowPilot}
+  admin:
+    bootstrap-email: ${FLOWPILOT_ADMIN_BOOTSTRAP_EMAIL:}
+    bootstrap-password: ${FLOWPILOT_ADMIN_BOOTSTRAP_PASSWORD:}
+    bootstrap-name: ${FLOWPILOT_ADMIN_BOOTSTRAP_NAME:Administrator}
+    bootstrap-reset: ${FLOWPILOT_ADMIN_BOOTSTRAP_RESET:false}
+  cloudinary:
+    cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+    api-key: ${CLOUDINARY_API_KEY:}
+    api-secret: ${CLOUDINARY_API_SECRET:}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html       # reachable by signed-in administrators only (see SecurityConfig)

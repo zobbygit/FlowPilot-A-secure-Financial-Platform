@@ -1,0 +1,16 @@
+server:
+  forward-headers-strategy: native     # trust only the platform proxy; see docs/SECURITY.md
+  tomcat:
+    remoteip:
+      internal-proxies: ${FLOWPILOT_TRUSTED_PROXY_REGEX:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}}
+logging:
+  structured:
+    format:
+      console: ecs                      # JSON logs with MDC (requestId)
+  level:
+    root: INFO
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
