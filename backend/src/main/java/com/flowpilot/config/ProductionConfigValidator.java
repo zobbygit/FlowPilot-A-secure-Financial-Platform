@@ -37,19 +37,21 @@ public class ProductionConfigValidator implements InitializingBean {
             );
         }
 
-        List<String> origins = props.cors().allowedOrigins();
+List<String> origins = props.cors().allowedOrigins();
 
-        if (origins != null) {
-            for (String origin : origins) {
-                if (isBlank(origin) || !isHttpsOrigin(origin)) {
-                    problems.add(
-                        "FLOWPILOT_CORS_ALLOWED_ORIGINS must contain " +
-                        "explicit HTTPS origins without wildcards"
-                    );
-                    break;
-                }
-            }
+if (origins == null || origins.isEmpty()) {
+    problems.add("FLOWPILOT_CORS_ALLOWED_ORIGINS must be set");
+} else {
+    for (String origin : origins) {
+        if (isBlank(origin) || !isHttpsOrigin(origin.trim())) {
+            problems.add(
+                "FLOWPILOT_CORS_ALLOWED_ORIGINS must contain " +
+                "explicit HTTPS origins without wildcards"
+            );
+            break;
         }
+    }
+}
 
         if ("None".equalsIgnoreCase(props.cookie().sameSite())
                 && !props.cookie().secure()) {
