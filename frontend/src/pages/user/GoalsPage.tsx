@@ -17,10 +17,18 @@ function GoalCard({ g, accounts, onChanged, onError }: { g: GoalView; accounts: 
   const [from, setFrom] = useState(''); const [to, setTo] = useState('');
   const [amount, setAmount] = useState(''); const [amountErr, setAmountErr] = useState<string | null>(null);
   const usable = accounts.filter((a) => a.currency === g.currency);
-  const run = useMutation({
-    mutationFn: () => mode === 'plan' ? api.post(`/goals/${g.id}/allocations`, { amount }) : api.post(`/goals/${g.id}/transfers`, { amount, fromAccountId: from, toAccountId: to }),
-    onSuccess: () => { setMode('none'); setAmount(''); onChanged(); }, onError: (e) => onError(toApiError(e).message),
-  });
+const run = useMutation({
+  mutationFn: async () =>
+    mode === 'plan'
+      ? api.post(`/goals/${g.id}/allocations`, { amount })
+      : api.post(`/goals/${g.id}/transfers`, { amount, fromAccountId: from, toAccountId: to }),
+  onSuccess: () => {
+    setMode('none');
+    setAmount('');
+    onChanged();
+  },
+  onError: (e) => onError(toApiError(e).message),
+});
   const archive = useMutation({ mutationFn: () => api.delete(`/goals/${g.id}`), onSuccess: onChanged, onError: (e) => onError(toApiError(e).message) });
   const submit = () => {
     const r = amountOnlySchema.safeParse({ amount });
